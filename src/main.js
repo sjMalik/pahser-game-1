@@ -1,11 +1,25 @@
 import './style.css'
 import Phaser from "phaser";
 
+// Phaser 3 game configuration object with type, width, height, physics, and scene properties
+const config = {
+  type: Phaser.AUTO,
+  width: 800,
+  height: 600,
+  scene: {
+    preload,
+    create,
+    update
+  }
+};
+
+let game = new Phaser.Game(config);
+
 function preload() {
-  this.load.image('background', '/assets/backgrounds/background_day.png');
-  this.load.image('bird1', '/assets/objects/bird_blue_0.png');
-  this.load.image('bird2', '/assets/objects/bird_blue_1.png');
-  this.load.image('bird3', '/assets/objects/bird_blue_2.png');
+  this.load.image('background', '/assets/backgrounds/background_night.png');
+  this.load.image('bird1', '/assets/objects/bird_yellow_1.png');
+  this.load.image('bird2', '/assets/objects/bird_yellow_2.png');
+  this.load.image('bird3', '/assets/objects/bird_yellow_3.png');
 }
 
 let background;
@@ -15,17 +29,12 @@ let birdFrame = 0; // To track the current frame for animation
 let birdFrames = ['bird1', 'bird2', 'bird3']; // Array of bird frames
 
 function create() {
-  // Add background image to the scene and scale it to fit the game's size 
   background = this.add.tileSprite(0, 0, game.config.width, game.config.height, "background");
-  // Set the origin to the top-left corner of the image to make it fit the game's size
-  background.setOrigin(0, 0);
-  // Set the image's displayWidth and displayHeight to the game's width and height 
-  background.displayWidth = this.sys.game.config.width;
-  background.displayHeight = this.sys.game.config.height; // Fixed typo
+  background.setScale(3);
 
   // Add the bird sprite to the scene
-  bird = this.add.sprite(400, 300, 'bird1'); // Start with the first frame
-  bird.setScale(2.5); // Scale the bird down if needed
+  bird = this.add.sprite(game.config.width / 2, game.config.height / 2, 'bird1'); // Position the bird in the middle of the game bounds
+  bird.setScale(1); // Scale the bird down if needed
 
   // Add game title text on the screen
   this.add.text(120, 20, '🐦 Phaser Game Tutorial: Flappy Bird 🕹️', {
@@ -58,7 +67,7 @@ function create() {
 
 function update() {
   // Move the background horizontally to create a scrolling effect
-  background.tilePositionX += 1; // Adjust the speed as needed
+  background.tilePositionX += 0.5; // Adjust the speed as needed
 
   // Make the bird fly up and down
   bird.y += birdDirection * 1; // Adjust the speed of movement
@@ -73,17 +82,3 @@ function update() {
   }
   bird.setTexture(birdFrames[Math.floor(birdFrame)]);
 }
-
-const config = {
-  // Set the game's resolution and background color
-  type: Phaser.AUTO,
-  width: 800, // 800 pixels wide
-  height: 600,
-  scene: {
-    preload,
-    create,
-    update
-  }
-};
-
-const game = new Phaser.Game(config);
