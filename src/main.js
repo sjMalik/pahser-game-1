@@ -26,6 +26,34 @@ function create() {
   // Add the bird sprite to the scene
   bird = this.add.sprite(400, 300, 'bird1'); // Start with the first frame
   bird.setScale(2.5); // Scale the bird down if needed
+
+  // Add game title text on the screen
+  this.add.text(120, 20, '🐦 Phaser Game Tutorial: Flappy Bird 🕹️', {
+    fontSize: '25px',
+    fontFamily: 'Arial',
+    color: '#ffffff',
+    fontStyle: 'bold'
+  }).setShadow(2, 2, "#000", 3); // Adding shadow for better visibility
+
+  // Add footer text with YouTube link
+  let youtubeLink = this.add.text(90, 570, '🎥 Click Here to Watch the Tutorial in my Youtube Channel - Coding with Sjmalik', {
+    fontSize: '15px',
+    fontFamily: 'Arial',
+    color: '#ffff00', // Yellow color for visibility
+    fontStyle: 'bold'
+  }).setShadow(1, 1, "#000", 2);
+
+  // Make the text interactive and open YouTube link on click
+  youtubeLink.setInteractive({ useHandCursor: true }) // Change cursor on hover
+    .on('pointerdown', () => {
+      window.open('https://www.youtube.com/@sjmalik1407', '_blank'); // Open in new tab
+    })
+    .on('pointerover', () => {
+      youtubeLink.setColor('#ff0000'); // Change color to red when hovered
+    })
+    .on('pointerout', () => {
+      youtubeLink.setColor('#ffff00'); // Change back to yellow when not hovered
+    });
 }
 
 function update() {
