@@ -1,11 +1,17 @@
 import './style.css'
 import Phaser from "phaser";
 
-// Phaser 3 game configuration object with type, width, height, physics, and scene properties
 const config = {
   type: Phaser.AUTO,
-  width: 800,
-  height: 600,
+  width: 288,
+  height: 512,
+  physics: {
+    default: 'arcade',
+    arcade: {
+      gravity: { y: 0 },
+      debug: false
+    }
+  },
   scene: {
     preload,
     create,
@@ -20,65 +26,79 @@ function preload() {
   this.load.image('bird1', '/assets/objects/bird_yellow_1.png');
   this.load.image('bird2', '/assets/objects/bird_yellow_2.png');
   this.load.image('bird3', '/assets/objects/bird_yellow_3.png');
+  this.load.image('base', '/assets/backgrounds/ground.png');
+  this.load.image('piller', '/assets/backgrounds/pipe_red_bottom.png');
 }
 
 let background;
 let bird;
-let birdDirection = 1; // 1 for moving up, -1 for moving down
-let birdFrame = 0; // To track the current frame for animation
-let birdFrames = ['bird1', 'bird2', 'bird3']; // Array of bird frames
+let birdFrame = 0;
+let birdFrames = ['bird1', 'bird2', 'bird3'];
+let base;
 
 function create() {
   background = this.add.tileSprite(0, 0, game.config.width, game.config.height, "background");
-  background.setScale(3);
+  background.setOrigin(0, 0);
+  background.setScale(2);
+  background.displayWidth = this.sys.game.config.width;
+  background.displayheight = this.sys.game.config.height;
 
-  // Add the bird sprite to the scene
-  bird = this.add.sprite(game.config.width / 2, game.config.height / 2, 'bird1'); // Position the bird in the middle of the game bounds
-  bird.setScale(1); // Scale the bird down if needed
+  let baseImage = this.textures.get("base");
+  let baseHeight = baseImage.getSourceImage().height;
+  base = this.add.tileSprite(game.config.width / 2, game.config.height - baseHeight / 2, game.config.width, baseHeight, "base");
+  this.physics.add.existing(base, true);
+  base.setDepth(1);
 
-  // Add game title text on the screen
-  this.add.text(120, 20, '🐦 Phaser Game Tutorial: Flappy Bird 🕹️', {
-    fontSize: '25px',
-    fontFamily: 'Arial',
-    color: '#ffffff',
-    fontStyle: 'bold'
-  }).setShadow(2, 2, "#000", 3); // Adding shadow for better visibility
+  bird = this.add.sprite(game.config.width / 2, game.config.height / 2, birdFrames[0]);
 
-  // Add footer text with YouTube link
-  let youtubeLink = this.add.text(90, 570, '🎥 Click Here to Watch the Tutorial in my Youtube Channel - Coding with Sjmalik', {
-    fontSize: '15px',
-    fontFamily: 'Arial',
-    color: '#ffff00', // Yellow color for visibility
-    fontStyle: 'bold'
-  }).setShadow(1, 1, "#000", 2);
+  // Add mouse click event listener
+  this.input.on('pointerdown', () => {
+    bird.y -= 50; // Move the bird up by 50 pixels on click
+  });
 
-  // Make the text interactive and open YouTube link on click
-  youtubeLink.setInteractive({ useHandCursor: true }) // Change cursor on hover
-    .on('pointerdown', () => {
-      window.open('https://www.youtube.com/@sjmalik1407', '_blank'); // Open in new tab
-    })
-    .on('pointerover', () => {
-      youtubeLink.setColor('#ff0000'); // Change color to red when hovered
-    })
-    .on('pointerout', () => {
-      youtubeLink.setColor('#ffff00'); // Change back to yellow when not hovered
+  // Function to create a random-sized piller
+  const createPiller = () => {
+    let pillerHeight = Phaser.Math.Between(100, 300); // Random height between 100 and 300
+    let piller = this.add.sprite(game.config.width, game.config.height - base.height, 'piller');
+    piller.displayHeight = pillerHeight; // Adjust the height of the piller
+    piller.setOrigin(0.5, 1); // Set origin to the bottom center
+    this.physics.add.existing(piller);
+    piller.body.setVelocityX(-100); // Move the piller to the left
+
+    // Remove the piller when it goes out of bounds
+    piller.body.onWorldBounds = true;
+    piller.body.world.on('worldbounds', (body) => {
+      if (body.gameObject === piller) {
+        piller.destroy();
+      }
     });
+  };
+
+  // Create a new piller every 2 seconds
+  this.time.addEvent({
+    delay: 2000,
+    callback: createPiller,
+    loop: true
+  });
 }
 
 function update() {
-  // Move the background horizontally to create a scrolling effect
-  background.tilePositionX += 0.5; // Adjust the speed as needed
+  background.tilePositionX += 0.5;
+  base.tilePositionX += 0.5;
 
-  // Make the bird fly up and down
-  bird.y += birdDirection * 1; // Adjust the speed of movement
-  if (bird.y <= 250 || bird.y >= 350) {
-    birdDirection *= -1; // Reverse direction when reaching bounds
+  // Gravity effect to make the bird fall down
+  bird.y += 2; // Adjust the gravity speed as needed
+
+  // Prevent the bird from falling below the base
+  let baseTop = game.config.height - base.height;
+  if (bird.y + bird.height / 2 > baseTop) {
+    bird.y = baseTop - bird.height / 2;
   }
 
   // Animate the bird by cycling through frames
-  birdFrame += 0.1; // Adjust the speed of animation
+  birdFrame += 0.1;
   if (birdFrame >= birdFrames.length) {
-    birdFrame = 0; // Reset to the first frame
+    birdFrame = 0;
   }
   bird.setTexture(birdFrames[Math.floor(birdFrame)]);
 }
