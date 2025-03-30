@@ -1,11 +1,14 @@
 import './style.css'
 import Phaser from "phaser";
 
+// This is the main entry point for the Phaser game
+// It initializes the game and sets up the configuration
+// for the game, including the physics engine, scene, and assets to be loaded.
 const config = {
-  type: Phaser.AUTO,
+  type: Phaser.AUTO, // Use WebGL if available, otherwise use Canvas
   width: 288,
   height: 512,
-  physics: {
+  physics: {  
     default: 'arcade',
     arcade: {
       gravity: { y: 0 },
@@ -21,6 +24,13 @@ const config = {
 
 let game = new Phaser.Game(config);
 
+
+/**
+ * Preload function to load assets before the game starts
+ * This function is called before the create function
+ * It loads images and other assets that will be used in the game
+ * @returns {void}
+ */
 function preload() {
   this.load.image('background', '/assets/backgrounds/background_night.png');
   this.load.image('bird1', '/assets/objects/bird_yellow_1.png');
@@ -36,10 +46,40 @@ let birdFrame = 0;
 let birdFrames = ['bird1', 'bird2', 'bird3'];
 let base;
 
+/**
+ * Create function to set up the game scene
+ * This function is called after the preload function
+ * It creates the game objects, sets up physics, and initializes the game state
+ * @returns {void}
+ * @param {Phaser.Scene} this - The current scene instance
+ * @param {Phaser.Game} game - The current game instance
+ * @param {Phaser.GameConfig} config - The game configuration object
+ * @param {Phaser.GameObjects} gameObjects - The game objects in the scene
+ * @param {Phaser.Physics} physics - The physics engine used in the game
+ * @param {Phaser.Input} input - The input manager for handling user input
+ * @param {Phaser.Loader} loader - The loader for loading assets
+ * @param {Phaser.Time} time - The time manager for handling game time
+ * @param {Phaser.Cameras} cameras - The camera manager for handling game cameras
+ * @param {Phaser.Scale} scale - The scale manager for handling game scaling
+ * @param {Phaser.Display} display - The display manager for handling game display
+ * @param {Phaser.Renderer} renderer - The renderer for rendering game graphics
+ * @param {Phaser.GameObjects} gameObjects - The game objects in the scene
+ * @param {Phaser.GameConfig} gameConfig - The game configuration object
+ * @param {Phaser.Game} game - The current game instance
+ * @param {Phaser.GameObjects} gameObjects - The game objects in the scene
+ * @param {Phaser.Physics} physics - The physics engine used in the game
+ * @param {Phaser.Input} input - The input manager for handling user input
+ * @param {Phaser.Loader} loader - The loader for loading assets
+ * @param {Phaser.Time} time - The time manager for handling game time
+ * @param {Phaser.Cameras} cameras - The camera manager for handling game cameras 
+ */
 function create() {
   background = this.add.tileSprite(0, 0, game.config.width, game.config.height, "background");
+  // Set the origin to the top left corner
   background.setOrigin(0, 0);
+  // Set the scale to fit the screen
   background.setScale(2);
+  // Set the display size to match the game config
   background.displayWidth = this.sys.game.config.width;
   background.displayheight = this.sys.game.config.height;
 
