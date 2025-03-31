@@ -38,6 +38,7 @@ function preload() {
   this.load.image('bird3', '/assets/objects/bird_yellow_3.png');
   this.load.image('base', '/assets/backgrounds/ground.png');
   this.load.image('piller', '/assets/backgrounds/pipe_red_bottom.png');
+  this.load.image('startGame', '/assets/backgrounds/message.png');
 }
 
 let background;
@@ -75,6 +76,17 @@ let birdDirection = 1; // 1 for down, -1 for up
  * @param {Phaser.Cameras} cameras - The camera manager for handling game cameras 
  */
 function create() {
+  // Show start game image
+  let startGameImage = this.add.image(game.config.width / 2, game.config.height / 2, 'startGame');
+  startGameImage.setOrigin(0.5, 0.5);
+  startGameImage.setScale(0.5);
+  startGameImage.setInteractive();
+  startGameImage.on('pointerdown', () => {
+    startGameImage.destroy(); // Remove start game image
+    this.scene.restart(); // Restart the scene to start the game
+  }
+  );
+
   background = this.add.tileSprite(0, 0, game.config.width, game.config.height, "background");
   background.setOrigin(0, 0);
   background.setScale(2);
@@ -90,8 +102,9 @@ function create() {
   bird = this.physics.add.sprite(game.config.width / 2, game.config.height / 2, birdFrames[0]);
   bird.setCollideWorldBounds(true);
 
+  // Add event for mouse click or touch to make the bird jump
   this.input.on('pointerdown', () => {
-    bird.setVelocityY(-200); // Apply upward velocity on click
+    bird.setVelocityY(-200); // Apply upward velocity on click or tap
   });
 
   const createPiller = () => {
@@ -124,6 +137,8 @@ function create() {
     bird.setTint(0xff0000); // Change bird color to red
     bird.setVelocity(0, 0); // Stop bird movement
     this.physics.pause(); // Pause the physics engine
+    background.tilePositionX = 0; // Stop background movement
+    base.tilePositionX = 0; // Stop base movement
     this.add.text(game.config.width / 2 - 50, game.config.height / 2, 'Game Over', {
       fontSize: '32px',
       color: '#ffffff'
@@ -141,16 +156,18 @@ function update() {
   base.tilePositionX += 0.5;
 
   if (bird.active) {
-    bird.y += 2;
+    // Apply gravity-like effect when no input is given
+    bird.setVelocityY(bird.body.velocity.y + 10);
 
     let baseTop = game.config.height - base.height;
     if (bird.y + bird.height / 2 > baseTop) {
       bird.y = baseTop - bird.height / 2;
+      bird.setVelocityY(0); // Stop bird movement when it hits the ground
     }
 
     const spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
-    if (spaceKey.isDown) {
-      bird.setVelocityY(-200);
+    if (spaceKey.isDown || this.input.activePointer.isDown) {
+      bird.setVelocityY(-200); // Apply upward velocity on space or click
     }
 
     birdFrame += 0.1;
