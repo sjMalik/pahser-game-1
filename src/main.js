@@ -8,7 +8,7 @@ const config = {
   type: Phaser.AUTO, // Use WebGL if available, otherwise use Canvas
   width: 288,
   height: 512,
-  physics: {  
+  physics: {
     default: 'arcade',
     arcade: {
       gravity: { y: 0 },
@@ -45,6 +45,7 @@ let bird;
 let birdFrame = 0;
 let birdFrames = ['bird1', 'bird2', 'bird3'];
 let base;
+let birdDirection = 1; // 1 for down, -1 for up
 
 /**
  * Create function to set up the game scene
