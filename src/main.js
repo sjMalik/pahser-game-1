@@ -47,6 +47,7 @@ let birdFrame = 0;
 let birdFrames = ['bird1', 'bird2', 'bird3'];
 let base;
 let birdDirection = 1; // 1 for down, -1 for up
+let gameOver = false;
 
 /**
  * Create function to set up the game scene
@@ -127,13 +128,8 @@ function create() {
     });
   };
 
-  this.time.addEvent({
-    delay: 2000,
-    callback: createPiller,
-    loop: true
-  });
-
   const handleCollision = () => {
+    gameOver = true; // Set gameOver to true
     bird.setTint(0xff0000); // Change bird color to red
     bird.setVelocity(0, 0); // Stop bird movement
     this.physics.pause(); // Pause the physics engine
@@ -146,12 +142,27 @@ function create() {
 
     // Restart the game after a short delay
     this.time.delayedCall(2000, () => {
+      gameOver = false; // Reset gameOver to false
       this.scene.restart();
     });
   };
+
+  this.time.addEvent({
+    delay: 2000,
+    callback: () => {
+      if (!gameOver) {
+        createPiller();
+      }
+    },
+    loop: true
+  });
 }
 
 function update() {
+  if (gameOver) {
+    return; // Skip update if game is over
+  }
+  // Update background and base position
   background.tilePositionX += 0.5;
   base.tilePositionX += 0.5;
 
