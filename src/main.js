@@ -39,6 +39,12 @@ function preload() {
   this.load.image('base', '/assets/backgrounds/ground.png');
   this.load.image('piller', '/assets/backgrounds/pipe_red_bottom.png');
   this.load.image('startGame', '/assets/backgrounds/message.png');
+  this.load.image('resume', '/assets/backgrounds/button_resume.png');
+  this.load.image('playButton', '/assets/backgrounds/button_play_normal.png');
+  this.load.audio("score", "assets/music/point.wav");
+  this.load.audio("hit", "assets/music/hit.wav");
+  this.load.audio("wing", "assets/music/wing.wav");
+  this.load.audio("die", "assets/music/die.wav");
 }
 
 let background;
@@ -47,7 +53,15 @@ let birdFrame = 0;
 let birdFrames = ['bird1', 'bird2', 'bird3'];
 let base;
 let birdDirection = 1; // 1 for down, -1 for up
+let gameStarted = false;
 let gameOver = false;
+let scoreText;
+let score = 0;
+let point;
+let hit;
+let wing;
+let die;
+
 
 /**
  * Create function to set up the game scene
@@ -77,6 +91,7 @@ let gameOver = false;
  * @param {Phaser.Cameras} cameras - The camera manager for handling game cameras 
  */
 function create() {
+  gameStarted = false;
   // Show start game image
   let startGameImage = this.add.image(game.config.width / 2, game.config.height / 2, 'startGame');
   startGameImage.setOrigin(0.5, 0.5);
@@ -84,9 +99,34 @@ function create() {
   startGameImage.setInteractive();
   startGameImage.on('pointerdown', () => {
     startGameImage.destroy(); // Remove start game image
-    this.scene.restart(); // Restart the scene to start the game
-  }
-  );
+    gameStarted = true; // Set gameStarted to true
+    bird.setActive(true).setVisible(true); // Show and activate the bird
+    bird.setVelocityY(0); // Reset bird velocity
+
+    scoreText = this.add.text(game.config.width / 2, 30, "0", {
+      fontSize: "32px",
+      fontFamily: "Fantasy",
+      fill: "white",
+    });
+    scoreText.setOrigin(0.5, 0.5);
+    scoreText.setDepth(1);
+
+    // Add sound effects
+    point = this.sound.add("score");
+    hit = this.sound.add("hit");
+    wing = this.sound.add("wing");
+    die = this.sound.add("die");
+
+    this.time.addEvent({
+      delay: 2000,
+      callback: () => {
+        if (!gameOver) {
+          createPiller();
+        }
+      },
+      loop: true
+    });
+  });
 
   background = this.add.tileSprite(0, 0, game.config.width, game.config.height, "background");
   background.setOrigin(0, 0);
@@ -102,11 +142,19 @@ function create() {
 
   bird = this.physics.add.sprite(game.config.width / 2, game.config.height / 2, birdFrames[0]);
   bird.setCollideWorldBounds(true);
+  // bird.setActive(false).setVisible(false); // Hide and deactivate the bird initially
+
+  // Pause all movement and physics initially
+  // this.physics.pause();
+  // background.tilePositionX = 0;
+  // base.tilePositionX = 0;
 
   // Add event for mouse click or touch to make the bird jump
-  this.input.on('pointerdown', () => {
-    bird.setVelocityY(-200); // Apply upward velocity on click or tap
-  });
+  // this.input.on('pointerdown', () => {
+  //   if (gameStarted) return; // Ignore input if game has already started
+  //   gameStarted = true; // Set gameStarted to true
+  //   bird.setVelocityY(-200); // Apply upward velocity on click or tap
+  // });
 
   const createPiller = () => {
     let pillerHeight = Phaser.Math.Between(100, 300);
@@ -130,6 +178,8 @@ function create() {
 
   const handleCollision = () => {
     gameOver = true; // Set gameOver to true
+    hit.play(); // Play hit sound
+    die.play(); // Play die sound
     bird.setTint(0xff0000); // Change bird color to red
     bird.setVelocity(0, 0); // Stop bird movement
     this.physics.pause(); // Pause the physics engine
@@ -140,26 +190,39 @@ function create() {
       color: '#ffffff'
     });
 
-    // Restart the game after a short delay
-    this.time.delayedCall(2000, () => {
-      gameOver = false; // Reset gameOver to false
-      this.scene.restart();
+    let resumeButton = this.add.image(game.config.width / 2, game.config.height / 2 + 50, 'resume');
+    resumeButton.setOrigin(0.6, 0.5);
+    resumeButton.setScale(3);
+    resumeButton.setInteractive();
+    resumeButton.on('pointerdown', () => {
+      resumeGame();
     });
   };
 
-  this.time.addEvent({
-    delay: 2000,
-    callback: () => {
-      if (!gameOver) {
-        createPiller();
-      }
-    },
-    loop: true
+  // Add collision detection between bird and base
+  this.physics.add.collider(bird, base, () => {
+    handleCollision();
   });
+
+  // Add collision detection for bird hitting the upper boundary of the canvas
+  bird.body.onWorldBounds = true;
+  this.physics.world.on('worldbounds', (body) => {
+    if (body.gameObject === bird && bird.y <= 0) {
+      handleCollision();
+    }
+  });
+
+  const resumeGame = () => {
+    gameOver = false; // Reset gameOver to false
+    score = 0; // Reset score to 0
+    bird.clearTint(); // Remove tint from bird
+    bird.setActive(false).setVisible(false); // Hide and deactivate the bird
+    this.scene.restart(); // Restart the scene
+  }
 }
 
 function update() {
-  if (gameOver) {
+  if (gameOver || !gameStarted) {
     return; // Skip update if game is over
   }
   // Update background and base position
@@ -178,6 +241,7 @@ function update() {
 
     const spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
     if (spaceKey.isDown || this.input.activePointer.isDown) {
+      wing.play();
       bird.setVelocityY(-200); // Apply upward velocity on space or click
     }
 
@@ -186,5 +250,18 @@ function update() {
       birdFrame = 0;
     }
     bird.setTexture(birdFrames[Math.floor(birdFrame)]);
+
+    // Check for pillars that the bird has passed
+    this.physics.world.colliders.getActive().forEach((collider) => {
+      if (collider.object1 === bird && collider.object2.texture.key === 'piller') {
+        let piller = collider.object2;
+        if (piller.x + piller.width / 2 < bird.x - bird.width / 2 && !piller.scored) {
+          point.play(); // Play score sound
+          piller.scored = true; // Mark the pillar as scored
+          score += 1; // Increment the score
+          scoreText.setText(score.toString()); // Update the score text
+        }
+      }
+    });
   }
 }
