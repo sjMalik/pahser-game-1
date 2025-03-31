@@ -135,6 +135,15 @@ function update() {
     bird.y = baseTop - bird.height / 2;
   }
 
+  // Go up when the space key is pressed
+  const spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+  if (spaceKey.isDown) {
+    bird.y -= 4; // Move the bird up by 4 pixels
+    birdDirection = -1; // Set the direction to up
+  } else {
+    birdDirection = 1; // Set the direction to down
+  }
+
   // Animate the bird by cycling through frames
   birdFrame += 0.1;
   if (birdFrame >= birdFrames.length) {
