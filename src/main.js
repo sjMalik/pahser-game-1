@@ -120,7 +120,7 @@ function create() {
     loop: true
   });
 
-  function handleCollision() {
+  const handleCollision = () => {
     bird.setTint(0xff0000); // Change bird color to red
     bird.setVelocity(0, 0); // Stop bird movement
     this.physics.pause(); // Pause the physics engine
@@ -128,7 +128,12 @@ function create() {
       fontSize: '32px',
       color: '#ffffff'
     });
-  }
+
+    // Restart the game after a short delay
+    this.time.delayedCall(2000, () => {
+      this.scene.restart();
+    });
+  };
 }
 
 function update() {
