@@ -76,11 +76,8 @@ let birdDirection = 1; // 1 for down, -1 for up
  */
 function create() {
   background = this.add.tileSprite(0, 0, game.config.width, game.config.height, "background");
-  // Set the origin to the top left corner
   background.setOrigin(0, 0);
-  // Set the scale to fit the screen
   background.setScale(2);
-  // Set the display size to match the game config
   background.displayWidth = this.sys.game.config.width;
   background.displayheight = this.sys.game.config.height;
 
@@ -90,65 +87,71 @@ function create() {
   this.physics.add.existing(base, true);
   base.setDepth(1);
 
-  bird = this.add.sprite(game.config.width / 2, game.config.height / 2, birdFrames[0]);
+  bird = this.physics.add.sprite(game.config.width / 2, game.config.height / 2, birdFrames[0]);
+  bird.setCollideWorldBounds(true);
 
-  // Add mouse click event listener
   this.input.on('pointerdown', () => {
-    bird.y -= 50; // Move the bird up by 50 pixels on click
+    bird.setVelocityY(-200); // Apply upward velocity on click
   });
 
-  // Function to create a random-sized piller
   const createPiller = () => {
-    let pillerHeight = Phaser.Math.Between(100, 300); // Random height between 100 and 300
-    let piller = this.add.sprite(game.config.width, game.config.height - base.height, 'piller');
-    piller.displayHeight = pillerHeight; // Adjust the height of the piller
-    piller.setOrigin(0.5, 1); // Set origin to the bottom center
-    this.physics.add.existing(piller);
-    piller.body.setVelocityX(-100); // Move the piller to the left
+    let pillerHeight = Phaser.Math.Between(100, 300);
+    let piller = this.physics.add.sprite(game.config.width, game.config.height - base.height, 'piller');
+    piller.displayHeight = pillerHeight;
+    piller.setOrigin(0.5, 1);
+    piller.body.setVelocityX(-100);
 
-    // Remove the piller when it goes out of bounds
     piller.body.onWorldBounds = true;
     piller.body.world.on('worldbounds', (body) => {
       if (body.gameObject === piller) {
         piller.destroy();
       }
     });
+
+    // Add collision detection between bird and piller
+    this.physics.add.collider(bird, piller, () => {
+      handleCollision();
+    });
   };
 
-  // Create a new piller every 2 seconds
   this.time.addEvent({
     delay: 2000,
     callback: createPiller,
     loop: true
   });
+
+  function handleCollision() {
+    bird.setTint(0xff0000); // Change bird color to red
+    bird.setVelocity(0, 0); // Stop bird movement
+    this.physics.pause(); // Pause the physics engine
+    this.add.text(game.config.width / 2 - 50, game.config.height / 2, 'Game Over', {
+      fontSize: '32px',
+      color: '#ffffff'
+    });
+  }
 }
 
 function update() {
   background.tilePositionX += 0.5;
   base.tilePositionX += 0.5;
 
-  // Gravity effect to make the bird fall down
-  bird.y += 2; // Adjust the gravity speed as needed
+  if (bird.active) {
+    bird.y += 2;
 
-  // Prevent the bird from falling below the base
-  let baseTop = game.config.height - base.height;
-  if (bird.y + bird.height / 2 > baseTop) {
-    bird.y = baseTop - bird.height / 2;
-  }
+    let baseTop = game.config.height - base.height;
+    if (bird.y + bird.height / 2 > baseTop) {
+      bird.y = baseTop - bird.height / 2;
+    }
 
-  // Go up when the space key is pressed
-  const spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
-  if (spaceKey.isDown) {
-    bird.y -= 4; // Move the bird up by 4 pixels
-    birdDirection = -1; // Set the direction to up
-  } else {
-    birdDirection = 1; // Set the direction to down
-  }
+    const spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+    if (spaceKey.isDown) {
+      bird.setVelocityY(-200);
+    }
 
-  // Animate the bird by cycling through frames
-  birdFrame += 0.1;
-  if (birdFrame >= birdFrames.length) {
-    birdFrame = 0;
+    birdFrame += 0.1;
+    if (birdFrame >= birdFrames.length) {
+      birdFrame = 0;
+    }
+    bird.setTexture(birdFrames[Math.floor(birdFrame)]);
   }
-  bird.setTexture(birdFrames[Math.floor(birdFrame)]);
 }
