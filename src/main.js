@@ -147,21 +147,45 @@ function create() {
   bird.setCollideWorldBounds(true);
 
   const createPiller = () => {
+    let gap = 150; // Gap between the top and bottom pillars
     let pillerHeight = Phaser.Math.Between(100, 300);
-    let piller = this.physics.add.sprite(game.config.width, game.config.height - base.height, 'piller');
-    piller.displayHeight = pillerHeight;
-    piller.setOrigin(0.5, 1);
-    piller.body.setVelocityX(-100);
 
-    piller.body.onWorldBounds = true;
-    piller.body.world.on('worldbounds', (body) => {
-      if (body.gameObject === piller) {
+    // Create the bottom pillar
+    let bottomPiller = this.physics.add.sprite(game.config.width, game.config.height - base.height, 'piller');
+    bottomPiller.displayHeight = pillerHeight;
+    bottomPiller.setOrigin(0.5, 1);
+    bottomPiller.body.setVelocityX(-100);
+
+    // Create the top pillar
+    let topPiller = this.physics.add.sprite(game.config.width, 0, 'piller');
+    topPiller.setFlipY(true); // Reverse the image of the upper pillar
+    topPiller.displayHeight = game.config.height - pillerHeight - gap - base.height;
+    topPiller.setOrigin(0.5, 0);
+    topPiller.body.setVelocityX(-100);
+
+    // Destroy pillars when they go out of bounds
+    const destroyPiller = (piller) => {
+      if (piller.x + piller.width / 2 < 0) {
         piller.destroy();
+      }
+    };
+
+    bottomPiller.body.onWorldBounds = true;
+    topPiller.body.onWorldBounds = true;
+    this.physics.world.on('worldbounds', (body) => {
+      if (body.gameObject === bottomPiller) {
+        destroyPiller(bottomPiller);
+      }
+      if (body.gameObject === topPiller) {
+        destroyPiller(topPiller);
       }
     });
 
-    // Add collision detection between bird and piller
-    this.physics.add.collider(bird, piller, () => {
+    // Add collision detection between bird and both pillars
+    this.physics.add.collider(bird, bottomPiller, () => {
+      handleCollision();
+    });
+    this.physics.add.collider(bird, topPiller, () => {
       handleCollision();
     });
   };
@@ -256,16 +280,27 @@ function update() {
     }
     bird.setTexture(birdFrames[Math.floor(birdFrame)]);
 
-    // Check for pillars that the bird has passed
+    // Check for pairs of pillars that the bird has passed
     this.physics.world.colliders.getActive().forEach((collider) => {
       if (collider.object1 === bird && collider.object2.texture.key === 'piller') {
-        let piller = collider.object2;
-        if (piller.x + piller.width / 2 < bird.x - bird.width / 2 && !piller.scored) {
-          point.play(); // Play score sound
-          piller.scored = true; // Mark the pillar as scored
-          score += 1; // Increment the score
-          scoreText.setText(score.toString()); // Update the score text
+      let piller = collider.object2;
+      if (piller.x + piller.width / 2 < bird.x - bird.width / 2 && !piller.scored) {
+        piller.scored = true; // Mark the pillar as scored
+        
+        // Check if both top and bottom pillars of the pair are scored
+        let pairedPiller = this.physics.world.colliders.getActive().find((otherCollider) => 
+        otherCollider.object2 !== piller &&
+        otherCollider.object2.texture.key === 'piller' &&
+        Math.abs(otherCollider.object2.x - piller.x) < 10
+        );
+        
+        if (pairedPiller && !pairedPiller.object2.scored) {
+        pairedPiller.object2.scored = true; // Mark the paired pillar as scored
+        point.play(); // Play score sound
+        score += 1; // Increment the score
+        scoreText.setText(score.toString()); // Update the score text
         }
+      }
       }
     });
   }
