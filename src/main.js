@@ -36,9 +36,11 @@ function preload() {
   this.load.image('bird1', '/assets/objects/bird_yellow_1.png');
   this.load.image('bird2', '/assets/objects/bird_yellow_2.png');
   this.load.image('bird3', '/assets/objects/bird_yellow_3.png');
+  this.load.image('scoreBoard', '/assets/objects/score.png');
   this.load.image('base', '/assets/backgrounds/ground.png');
+  this.load.image('gameOver', '/assets/backgrounds/label_game_over.png');
   this.load.image('piller', '/assets/backgrounds/pipe_red_bottom.png');
-  this.load.image('startGame', '/assets/backgrounds/message.png');
+  this.load.image('startGame', './assets/backgrounds/message.png');
   this.load.image('resume', '/assets/backgrounds/button_resume.png');
   this.load.image('playButton', '/assets/backgrounds/button_play_normal.png');
   this.load.audio("score", "assets/music/point.wav");
@@ -92,10 +94,16 @@ let die;
  */
 function create() {
   gameStarted = false;
+
+  // Ensure the background is added first
+  background = this.add.tileSprite(0, 0, game.config.width, game.config.height, "background");
+  background.setOrigin(0, 0);
+  background.setScale(2);
+
   // Show start game image
   let startGameImage = this.add.image(game.config.width / 2, game.config.height / 2, 'startGame');
   startGameImage.setOrigin(0.5, 0.5);
-  startGameImage.setScale(0.5);
+  startGameImage.setScale(1);
   startGameImage.setInteractive();
   startGameImage.on('pointerdown', () => {
     startGameImage.destroy(); // Remove start game image
@@ -128,12 +136,6 @@ function create() {
     });
   });
 
-  background = this.add.tileSprite(0, 0, game.config.width, game.config.height, "background");
-  background.setOrigin(0, 0);
-  background.setScale(2);
-  background.displayWidth = this.sys.game.config.width;
-  background.displayheight = this.sys.game.config.height;
-
   let baseImage = this.textures.get("base");
   let baseHeight = baseImage.getSourceImage().height;
   base = this.add.tileSprite(game.config.width / 2, game.config.height - baseHeight / 2, game.config.width, baseHeight, "base");
@@ -141,20 +143,8 @@ function create() {
   base.setDepth(1);
 
   bird = this.physics.add.sprite(game.config.width / 2, game.config.height / 2, birdFrames[0]);
+  bird.setVisible(false); // Hide the bird initially
   bird.setCollideWorldBounds(true);
-  // bird.setActive(false).setVisible(false); // Hide and deactivate the bird initially
-
-  // Pause all movement and physics initially
-  // this.physics.pause();
-  // background.tilePositionX = 0;
-  // base.tilePositionX = 0;
-
-  // Add event for mouse click or touch to make the bird jump
-  // this.input.on('pointerdown', () => {
-  //   if (gameStarted) return; // Ignore input if game has already started
-  //   gameStarted = true; // Set gameStarted to true
-  //   bird.setVelocityY(-200); // Apply upward velocity on click or tap
-  // });
 
   const createPiller = () => {
     let pillerHeight = Phaser.Math.Between(100, 300);
@@ -185,13 +175,28 @@ function create() {
     this.physics.pause(); // Pause the physics engine
     background.tilePositionX = 0; // Stop background movement
     base.tilePositionX = 0; // Stop base movement
-    this.add.text(game.config.width / 2 - 50, game.config.height / 2, 'Game Over', {
-      fontSize: '32px',
-      color: '#ffffff'
-    });
 
-    let resumeButton = this.add.image(game.config.width / 2, game.config.height / 2 + 50, 'resume');
-    resumeButton.setOrigin(0.6, 0.5);
+    scoreText.setVisible(false); // Hide the score text
+
+    // Display the scoreBoard
+    let scoreBoard = this.add.image(game.config.width / 2, game.config.height / 2, 'scoreBoard');
+    scoreBoard.setOrigin(0.5, 0.5);
+    scoreBoard.setScale(1);
+
+    // Display the gameOver image on top of the scoreBoard
+    let gameOverImage = this.add.image(game.config.width / 2, game.config.height / 2 - 150, 'gameOver');
+    gameOverImage.setOrigin(0.5, 0.5);
+    gameOverImage.setScale(2);
+
+    // Display the final score on the scoreBoard
+    this.add.text(game.config.width / 2, game.config.height / 2 + 10, `${score}`, {
+      fontSize: '40px',
+      color: '#ffffff',
+      fontFamily: 'Fantasy'
+    }).setOrigin(0.5, 0.5);
+
+    let resumeButton = this.add.image(game.config.width / 2, game.config.height / 2 + 70, 'resume');
+    resumeButton.setOrigin(0.5, 0.5);
     resumeButton.setScale(3);
     resumeButton.setInteractive();
     resumeButton.on('pointerdown', () => {
