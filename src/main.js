@@ -1,13 +1,12 @@
 import './style.css'
 import Phaser from "phaser";
 
-// This is the main entry point for the Phaser game
-// It initializes the game and sets up the configuration
-// for the game, including the physics engine, scene, and assets to be loaded.
+const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
 const config = {
-  type: Phaser.AUTO, // Use WebGL if available, otherwise use Canvas
-  width: 288,
-  height: 512,
+  type: Phaser.AUTO,
+  width: isMobile ? window.innerWidth : (window.innerWidth > 512 ? 512 : window.innerWidth),
+  height: isMobile ? window.innerHeight : (window.innerHeight > 512 ? 512 : window.innerHeight),
   physics: {
     default: 'arcade',
     arcade: {
@@ -15,14 +14,7 @@ const config = {
       debug: false
     }
   },
-  scene: {
-    preload,
-    create,
-    update
-  },
-  scale: {
-    mode: Phaser.Scale.FIT,
-  }
+  scene: { preload, create, update }
 };
 
 let game = new Phaser.Game(config);
