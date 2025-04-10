@@ -91,14 +91,14 @@ function create() {
   gameStarted = false;
 
   // Ensure the background is added first
-  background = this.add.tileSprite(0, 0, game.config.width, game.config.height, "background");
-  background.setOrigin(0, 0);
-  background.setScale(2);
+  background = this.add.tileSprite(0, 0, game.config.width * 2, game.config.height * 2, 'background');
+  background.setOrigin(0, 0); // Set the origin to the top left corner
+  background.setScale(3); // Scale the background to fit the screen
 
   // Show start game image
   let startGameImage = this.add.image(game.config.width / 2, game.config.height / 2, 'startGame');
   startGameImage.setOrigin(0.5, 0.5);
-  startGameImage.setScale(1);
+  startGameImage.setScale(1.3);
   startGameImage.setInteractive();
   startGameImage.on('pointerdown', () => {
     startGameImage.destroy(); // Remove start game image
@@ -121,7 +121,7 @@ function create() {
     die = this.sound.add("die");
 
     this.time.addEvent({
-      delay: 2000,
+      delay: 3000,
       callback: () => {
         if (!gameOver) {
           createPiller();
