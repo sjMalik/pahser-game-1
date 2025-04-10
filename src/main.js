@@ -19,6 +19,9 @@ const config = {
     preload,
     create,
     update
+  },
+  scale: {
+    mode: Phaser.Scale.FIT,
   }
 };
 
@@ -283,24 +286,24 @@ function update() {
     // Check for pairs of pillars that the bird has passed
     this.physics.world.colliders.getActive().forEach((collider) => {
       if (collider.object1 === bird && collider.object2.texture.key === 'piller') {
-      let piller = collider.object2;
-      if (piller.x + piller.width / 2 < bird.x - bird.width / 2 && !piller.scored) {
-        piller.scored = true; // Mark the pillar as scored
-        
-        // Check if both top and bottom pillars of the pair are scored
-        let pairedPiller = this.physics.world.colliders.getActive().find((otherCollider) => 
-        otherCollider.object2 !== piller &&
-        otherCollider.object2.texture.key === 'piller' &&
-        Math.abs(otherCollider.object2.x - piller.x) < 10
-        );
-        
-        if (pairedPiller && !pairedPiller.object2.scored) {
-        pairedPiller.object2.scored = true; // Mark the paired pillar as scored
-        point.play(); // Play score sound
-        score += 1; // Increment the score
-        scoreText.setText(score.toString()); // Update the score text
+        let piller = collider.object2;
+        if (piller.x + piller.width / 2 < bird.x - bird.width / 2 && !piller.scored) {
+          piller.scored = true; // Mark the pillar as scored
+
+          // Check if both top and bottom pillars of the pair are scored
+          let pairedPiller = this.physics.world.colliders.getActive().find((otherCollider) =>
+            otherCollider.object2 !== piller &&
+            otherCollider.object2.texture.key === 'piller' &&
+            Math.abs(otherCollider.object2.x - piller.x) < 10
+          );
+
+          if (pairedPiller && !pairedPiller.object2.scored) {
+            pairedPiller.object2.scored = true; // Mark the paired pillar as scored
+            point.play(); // Play score sound
+            score += 1; // Increment the score
+            scoreText.setText(score.toString()); // Update the score text
+          }
         }
-      }
       }
     });
   }
